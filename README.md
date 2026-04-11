@@ -16,7 +16,8 @@ This project demonstrates:
 - TypeScript – type-safe language
 - Express – REST API layer
 - Google Cloud SQL - Database
-- Cloud SQL Auth Proxy
+- Redis – caching layer  
+- Docker – local containerised Redis development 
 
 ## Project structure 
 
@@ -74,7 +75,10 @@ gcloud sql users create app-user \
   --password='STRONG_APP_PASSWORD'
 ```
 
-5. Install Auth Proxy
+
+## One-off Local Development Setup
+
+1. Install Auth Proxy
 
 ```shell
 brew install cloud-sql-proxy
@@ -90,6 +94,21 @@ gcloud sql instances describe school-mysql-dev \
 **Tip**: Ensure the Cloud SQL connection name in `package.json`- `"dev:proxy"` script is correct for your environment.
 
 
+2. Init Redis container
+
+```shell
+docker run --name student-progress-redis -p 6379:6379 -d redis
+```
+
+Stop Redis after startup
+
+```shell
+docker stop student-progress-redis
+```
+
+Future development startup will restart Redis automatically via the dev script.
+
+
 ## Local Development Setup
 
 ```shell
@@ -97,6 +116,7 @@ npm run dev
 ```
 
 This will:
+- start the Redis Docker container
 - start the Cloud SQL Auth Proxy
 - start the application in watch mode
 
