@@ -1,11 +1,11 @@
 # Student Progress API
 
-Backend service for managing student results using MySQL on Google Cloud SQL.
+Backend service for managing student results using MySQL on Google Cloud SQL with Redis caching.
 
 This project demonstrates:
-
 - MySQL schema design
 - raw SQL migrations (no ORM)
+- Redis cache-aside strategy with cache invalidation
 - Cloud SQL setup on GCP
 - secure local development via Auth Proxy
 - TypeScript backend with clear layering
