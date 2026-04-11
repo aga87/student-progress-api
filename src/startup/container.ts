@@ -27,5 +27,6 @@ export const studentResultsCacheRepository = new StudentResultsCacheRepository(
 );
 
 export const studentResultsService = new StudentResultsService(
-  studentResultsRepository
+  studentResultsRepository,
+  studentResultsCacheRepository
 );
