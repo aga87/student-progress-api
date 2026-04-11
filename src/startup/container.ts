@@ -4,7 +4,10 @@ import {
   StudentResultsRepository,
   StudentResultsCacheRepository,
 } from '../repositories/index.js';
-import { StudentResultsService } from '../services/studentResults.service.js';
+import {
+  StudentResultsCommandService,
+  StudentResultsService,
+} from '../services/index.js';
 
 export const db = createMySqlClient({
   host: ENV.config.db.host,
@@ -27,6 +30,11 @@ export const studentResultsCacheRepository = new StudentResultsCacheRepository(
 );
 
 export const studentResultsService = new StudentResultsService(
+  studentResultsRepository,
+  studentResultsCacheRepository
+);
+
+export const studentResultsCommandService = new StudentResultsCommandService(
   studentResultsRepository,
   studentResultsCacheRepository
 );

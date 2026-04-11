@@ -1,4 +1,7 @@
-import { type StudentResultsRepository } from '../repositories/studentResults.repository.js';
+import {
+  type StudentResultsRepository,
+  type CreateStudentResult,
+} from '../repositories/studentResults.repository.js';
 import { type StudentResultsCacheRepository } from '../repositories/studentResultsCache.repository.js';
 import { debugLog } from '../logging/debug.js';
 
@@ -90,5 +93,11 @@ export class StudentResultsService {
     debugLog(`Cached student results: ${studentId}`);
 
     return studentResults;
+  }
+
+  public async createResult(input: CreateStudentResult): Promise<void> {
+    await this.studentRepository.create(input);
+
+    await this.studentResultsCacheRepository.delete(input.studentId);
   }
 }
