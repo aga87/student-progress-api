@@ -17,6 +17,12 @@ export const ENV = {
     dbAdmin: {
       user: requireEnv('DB_ADMIN_USER'),
     },
+
+    redis: {
+      host: requireEnv('REDIS_HOST'),
+      port: Number(requireEnv('REDIS_PORT')),
+      ttlSeconds: Number(requireEnv('REDIS_TTL_SECONDS')),
+    },
   },
 
   secrets: {

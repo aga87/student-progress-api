@@ -9,6 +9,12 @@ export type StudentResult = {
 
 type StudentResultRowDb = StudentResult & RowDataPacket;
 
+export type CreateStudentResult = {
+  studentId: number;
+  subject: string;
+  score: number;
+};
+
 export class StudentResultsRepository {
   private db?: Pool;
   private readonly dbConnectionFn: () => Pool;
@@ -51,6 +57,23 @@ export class StudentResultsRepository {
     ]);
 
     return rows.map(row => this.mapRow(row));
+  }
+
+  public async create(input: CreateStudentResult): Promise<void> {
+    const query = `
+    INSERT INTO results (
+      student_id,
+      subject,
+      score
+    )
+    VALUES (?, ?, ?);
+  `;
+
+    await this.getDB().execute(query, [
+      input.studentId,
+      input.subject,
+      input.score,
+    ]);
   }
 
   private getDB(): Pool {

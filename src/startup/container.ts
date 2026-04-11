@@ -1,7 +1,13 @@
 import { ENV } from '../config/env.js';
-import { createMySqlClient } from '../integrations/db/client.js';
-import { StudentResultsRepository } from '../repositories/studentResults.repository.js';
-import { StudentResultsService } from '../services/studentResults.service.js';
+import { createMySqlClient, createRedisClient } from '../integrations/index.js';
+import {
+  StudentResultsRepository,
+  StudentResultsCacheRepository,
+} from '../repositories/index.js';
+import {
+  StudentResultsCommandService,
+  StudentResultsService,
+} from '../services/index.js';
 
 export const db = createMySqlClient({
   host: ENV.config.db.host,
@@ -11,8 +17,24 @@ export const db = createMySqlClient({
   database: ENV.config.db.name,
 });
 
+const redisClient = await createRedisClient({
+  host: ENV.config.redis.host,
+  port: ENV.config.redis.port,
+});
+
 const studentResultsRepository = new StudentResultsRepository(() => db);
 
+export const studentResultsCacheRepository = new StudentResultsCacheRepository(
+  redisClient,
+  ENV.config.redis.ttlSeconds
+);
+
 export const studentResultsService = new StudentResultsService(
-  studentResultsRepository
+  studentResultsRepository,
+  studentResultsCacheRepository
+);
+
+export const studentResultsCommandService = new StudentResultsCommandService(
+  studentResultsRepository,
+  studentResultsCacheRepository
 );

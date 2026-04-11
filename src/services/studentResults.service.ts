@@ -1,4 +1,9 @@
-import { type StudentResultsRepository } from '../repositories/studentResults.repository.js';
+import {
+  type StudentResultsRepository,
+  type CreateStudentResult,
+} from '../repositories/studentResults.repository.js';
+import { type StudentResultsCacheRepository } from '../repositories/studentResultsCache.repository.js';
+import { debugLog } from '../logging/debug.js';
 
 export type StudentWithResults = {
   studentId: number;
@@ -11,7 +16,8 @@ export type StudentWithResults = {
 
 export class StudentResultsService {
   public constructor(
-    private readonly studentRepository: StudentResultsRepository
+    private readonly studentRepository: StudentResultsRepository,
+    private readonly studentResultsCacheRepository: StudentResultsCacheRepository
   ) {}
 
   public async getAll(): Promise<StudentWithResults[]> {
@@ -49,6 +55,19 @@ export class StudentResultsService {
   public async getByStudentId(
     studentId: number
   ): Promise<StudentWithResults | null> {
+    // Cache-aside: read from cache first, fall back to DB on miss, then populate cache.
+
+    const cachedResults =
+      await this.studentResultsCacheRepository.get(studentId);
+
+    if (cachedResults) {
+      debugLog(`Cache hit for student results: ${studentId}`);
+
+      return JSON.parse(cachedResults) as StudentWithResults;
+    }
+
+    debugLog(`Cache miss for student results: ${studentId}`);
+
     const rows = await this.studentRepository.getByStudentId(studentId);
 
     if (rows.length === 0) {
@@ -57,7 +76,7 @@ export class StudentResultsService {
 
     const firstRow = rows[0];
 
-    return {
+    const studentResults = {
       studentId: firstRow.studentId,
       studentName: firstRow.studentName,
       results: rows.map(row => ({
@@ -65,5 +84,20 @@ export class StudentResultsService {
         score: row.score,
       })),
     };
+
+    await this.studentResultsCacheRepository.set(
+      studentId,
+      JSON.stringify(studentResults)
+    );
+
+    debugLog(`Cached student results: ${studentId}`);
+
+    return studentResults;
+  }
+
+  public async createResult(input: CreateStudentResult): Promise<void> {
+    await this.studentRepository.create(input);
+
+    await this.studentResultsCacheRepository.delete(input.studentId);
   }
 }
