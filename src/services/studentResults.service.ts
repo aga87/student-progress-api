@@ -45,4 +45,25 @@ export class StudentResultsService {
 
     return Array.from(studentsMap.values());
   }
+
+  public async getByStudentId(
+    studentId: number
+  ): Promise<StudentWithResults | null> {
+    const rows = await this.studentRepository.getByStudentId(studentId);
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    const firstRow = rows[0];
+
+    return {
+      studentId: firstRow.studentId,
+      studentName: firstRow.studentName,
+      results: rows.map(row => ({
+        subject: row.subject,
+        score: row.score,
+      })),
+    };
+  }
 }

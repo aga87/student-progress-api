@@ -13,8 +13,44 @@ export class StudentResultsRepository {
   private db?: Pool;
   private readonly dbConnectionFn: () => Pool;
 
-  constructor(dbConnectionFn: () => Pool) {
+  private readonly baseQuery = `
+    SELECT
+      s.id AS studentId,
+      s.name AS studentName,
+      r.subject AS subject,
+      r.score AS score
+    FROM students s
+    INNER JOIN results r
+      ON r.student_id = s.id
+  `;
+
+  public constructor(dbConnectionFn: () => Pool) {
     this.dbConnectionFn = dbConnectionFn;
+  }
+
+  public async getAll(): Promise<StudentResult[]> {
+    const query = `
+      ${this.baseQuery}
+      ORDER BY s.name ASC, r.subject ASC;
+    `;
+
+    const [rows] = await this.getDB().query<StudentResultRowDb[]>(query);
+
+    return rows.map(row => this.mapRow(row));
+  }
+
+  public async getByStudentId(studentId: number): Promise<StudentResult[]> {
+    const query = `
+      ${this.baseQuery}
+      WHERE s.id = ?
+      ORDER BY r.subject ASC;
+    `;
+
+    const [rows] = await this.getDB().query<StudentResultRowDb[]>(query, [
+      studentId,
+    ]);
+
+    return rows.map(row => this.mapRow(row));
   }
 
   private getDB(): Pool {
@@ -25,27 +61,12 @@ export class StudentResultsRepository {
     return this.db;
   }
 
-  public async getAll(): Promise<StudentResult[]> {
-    const query = `
-      SELECT
-        s.id AS studentId,
-        s.name AS studentName,
-        r.id AS resultId,
-        r.subject AS subject,
-        r.score AS score
-      FROM students s
-      INNER JOIN results r
-        ON r.student_id = s.id
-      ORDER BY s.name ASC, r.subject ASC;
-    `;
-
-    const [rows] = await this.getDB().query<StudentResultRowDb[]>(query);
-
-    return rows.map(row => ({
+  private mapRow(row: StudentResultRowDb): StudentResult {
+    return {
       studentId: row.studentId,
       studentName: row.studentName,
       subject: row.subject,
       score: row.score,
-    }));
+    };
   }
 }
