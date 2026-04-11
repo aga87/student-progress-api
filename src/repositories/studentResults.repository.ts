@@ -1,14 +1,13 @@
 import { type Pool, type RowDataPacket } from 'mysql2/promise';
 
-export type StudentResults = {
+export type StudentResult = {
   studentId: number;
   studentName: string;
-  resultId: number;
   subject: string;
   score: number;
 };
 
-type StudentResultRowDb = StudentResults & RowDataPacket;
+type StudentResultRowDb = StudentResult & RowDataPacket;
 
 export class StudentResultsRepository {
   private db?: Pool;
@@ -26,7 +25,7 @@ export class StudentResultsRepository {
     return this.db;
   }
 
-  public async getStudentResults(): Promise<StudentResults[]> {
+  public async getAll(): Promise<StudentResult[]> {
     const query = `
       SELECT
         s.id AS studentId,
@@ -45,7 +44,6 @@ export class StudentResultsRepository {
     return rows.map(row => ({
       studentId: row.studentId,
       studentName: row.studentName,
-      resultId: row.resultId,
       subject: row.subject,
       score: row.score,
     }));

@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { getStudentResultsHandler } from '../handlers/getStudentResults.handler.js';
+import { getAllStudentResultsHandler } from '../handlers/getStudentResults.handler.js';
 
 const router = Router();
 
-router.get('/', getStudentResultsHandler);
+router.get('/', getAllStudentResultsHandler);
 
 export { router as studentResultsRouter };
