@@ -32,7 +32,7 @@ sql/          → raw SQL (schema + seed)
 
 Run once per environment.
 
-1. Enable API
+1. Authenticate to GCP & enable API
 
 
 ```shell
@@ -74,12 +74,7 @@ gcloud sql users create app-user \
   --password='STRONG_APP_PASSWORD'
 ```
 
-
-## Local Development Setup
-
-1. Authenticate to GCP
-
-2. Install and run Auth Proxy
+5. Install Auth Proxy
 
 ```shell
 brew install cloud-sql-proxy
@@ -87,16 +82,23 @@ brew install cloud-sql-proxy
 
 Get connection name:
 
-```
+```shell
 gcloud sql instances describe school-mysql-dev \
   --format='value(connectionName)'
 ```
 
-Run proxy:
+**Tip**: Ensure the Cloud SQL connection name in `package.json`- `"dev:proxy"` script is correct for your environment.
+
+
+## Local Development Setup
 
 ```shell
-cloud-sql-proxy <CONNECTION_NAME> --port 3306
+npm run dev
 ```
+
+This will:
+- start the Cloud SQL Auth Proxy
+- start the application in watch mode
 
 
 ## Database Workflow
