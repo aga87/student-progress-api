@@ -7,7 +7,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "concurrently \"npm:dev:proxy\" \"npm:dev:app\"",
+    "dev": "concurrently -k \"npm:dev:proxy\" \"npm:dev:app\"",
     "dev:proxy": "cloud-sql-proxy student-progress-api:europe-west3:faqta-mysql-dev --port 3306",
     "dev:app": "tsx watch src/index.ts",
     "db:test": "tsx --tsconfig tsconfig.scripts.json scripts/test-db-connection.ts",
