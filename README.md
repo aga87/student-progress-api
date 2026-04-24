@@ -1,6 +1,6 @@
 # Student Progress API
 
-Backend service for managing student results, built with MySQL on Google Cloud SQL and Redis for caching.
+Backend service for managing student results, built with MySQL on Google Cloud SQL and Redis for caching. Infrastructure is provisioned using Terraform.
 
 Implements a cache-aside strategy with explicit cache invalidation on writes and graceful degradation on cache failures, allowing the API to fall back to the database while accepting bounded staleness.
 
@@ -12,6 +12,7 @@ Implements a cache-aside strategy with explicit cache invalidation on writes and
 - Cloud SQL setup on GCP
 - secure local development via Auth Proxy
 - TypeScript backend with clear layering
+- Infrastructure as Code (Terraform)
 
 ## Tech Stack
 
@@ -21,6 +22,7 @@ Implements a cache-aside strategy with explicit cache invalidation on writes and
 - Google Cloud SQL - Database
 - Redis – caching layer  
 - Docker – local containerised Redis development 
+- Terraform – infrastructure provisioning
 
 ## Project structure 
 
@@ -28,9 +30,25 @@ Implements a cache-aside strategy with explicit cache invalidation on writes and
 src/          → application code
 scripts/      → dev/ops scripts (migrations, seed, db test)
 sql/          → raw SQL (schema + seed)
+infra/        → Terraform infrastructure configuration
 ```
 
+## Infrastructure (Terraform)
 
+Infrastructure is provisioned using Terraform.
+
+Terraform workflow commands are defined in `infra/Makefile`, including formatting, validation, linting, planning, and applying changes.
+
+```bash
+cd infra
+make plan-staging
+make apply-staging
+make destroy-staging
+
+make plan-prod
+make apply-prod
+make destroy-prod
+```
 
 ## One-off Infrastructure Setup (GCP)
 
