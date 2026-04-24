@@ -1,9 +1,7 @@
-import {
-  type StudentResultsRepository,
-  type CreateStudentResult,
-} from '../repositories/studentResults.repository.js';
+import { type StudentResultsRepository } from '../repositories/studentResults.repository.js';
 import { type StudentResultsCacheRepository } from '../repositories/studentResultsCache.repository.js';
-import { debugLog } from '../logging/debug.js';
+import { debugLog, logger } from '../logging/index.js';
+import { getErrorMessage } from '../models/httpError.model.js';
 
 export type StudentWithResults = {
   studentId: number;
@@ -14,7 +12,7 @@ export type StudentWithResults = {
   }>;
 };
 
-export class StudentResultsService {
+export class StudentResultsQueryService {
   public constructor(
     private readonly studentRepository: StudentResultsRepository,
     private readonly studentResultsCacheRepository: StudentResultsCacheRepository
@@ -70,9 +68,7 @@ export class StudentResultsService {
 
     const rows = await this.studentRepository.getByStudentId(studentId);
 
-    if (rows.length === 0) {
-      return null;
-    }
+    if (rows.length === 0) return null;
 
     const firstRow = rows[0];
 
@@ -85,19 +81,21 @@ export class StudentResultsService {
       })),
     };
 
-    await this.studentResultsCacheRepository.set(
-      studentId,
-      JSON.stringify(studentResults)
-    );
+    try {
+      await this.studentResultsCacheRepository.set(
+        studentId,
 
-    debugLog(`Cached student results: ${studentId}`);
+        JSON.stringify(studentResults)
+      );
+
+      debugLog(`Cached student results [studentId=${studentId}]`);
+    } catch (err: unknown) {
+      logger.warn(
+        `Cache write failed; returning DB result [studentId=${studentId}]`,
+        { error: getErrorMessage(err) }
+      );
+    }
 
     return studentResults;
-  }
-
-  public async createResult(input: CreateStudentResult): Promise<void> {
-    await this.studentRepository.create(input);
-
-    await this.studentResultsCacheRepository.delete(input.studentId);
   }
 }

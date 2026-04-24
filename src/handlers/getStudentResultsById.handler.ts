@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { studentResultsService } from '../startup/container.js';
+import { studentResultsQueryService } from '../startup/container.js';
 
 export const getStudentResultsByIdHandler: RequestHandler = async (
   req,
@@ -13,7 +13,8 @@ export const getStudentResultsByIdHandler: RequestHandler = async (
     });
   }
 
-  const studentResults = await studentResultsService.getByStudentId(studentId);
+  const studentResults =
+    await studentResultsQueryService.getByStudentId(studentId);
 
   if (!studentResults) {
     return res.status(404).json({

@@ -6,7 +6,7 @@ import {
 } from '../repositories/index.js';
 import {
   StudentResultsCommandService,
-  StudentResultsService,
+  StudentResultsQueryService,
 } from '../services/index.js';
 
 export const db = createMySqlClient({
@@ -29,7 +29,7 @@ export const studentResultsCacheRepository = new StudentResultsCacheRepository(
   ENV.config.redis.ttlSeconds
 );
 
-export const studentResultsService = new StudentResultsService(
+export const studentResultsQueryService = new StudentResultsQueryService(
   studentResultsRepository,
   studentResultsCacheRepository
 );
