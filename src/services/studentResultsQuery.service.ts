@@ -14,7 +14,7 @@ export type StudentWithResults = {
   }>;
 };
 
-export class StudentResultsService {
+export class StudentResultsQueryService {
   public constructor(
     private readonly studentRepository: StudentResultsRepository,
     private readonly studentResultsCacheRepository: StudentResultsCacheRepository
@@ -93,11 +93,5 @@ export class StudentResultsService {
     debugLog(`Cached student results: ${studentId}`);
 
     return studentResults;
-  }
-
-  public async createResult(input: CreateStudentResult): Promise<void> {
-    await this.studentRepository.create(input);
-
-    await this.studentResultsCacheRepository.delete(input.studentId);
   }
 }

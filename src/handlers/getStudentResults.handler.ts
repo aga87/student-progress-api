@@ -1,8 +1,8 @@
 import { RequestHandler } from 'express';
-import { studentResultsService } from '../startup/container.js';
+import { studentResultsQueryService } from '../startup/container.js';
 
 export const getAllStudentResultsHandler: RequestHandler = async (req, res) => {
-  const studentResults = await studentResultsService.getAll();
+  const studentResults = await studentResultsQueryService.getAll();
 
   return res.status(200).json({
     data: studentResults,
