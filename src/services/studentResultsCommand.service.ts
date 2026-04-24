@@ -3,7 +3,8 @@ import {
   type CreateStudentResult,
 } from '../repositories/studentResults.repository.js';
 import { type StudentResultsCacheRepository } from '../repositories/studentResultsCache.repository.js';
-import { debugLog } from '../logging/debug.js';
+import { debugLog, logger } from '../logging/index.js';
+import { getErrorMessage } from '../models/httpError.model.js';
 
 export class StudentResultsCommandService {
   public constructor(
@@ -16,10 +17,17 @@ export class StudentResultsCommandService {
 
     debugLog(`Created student result [studentId=${input.studentId}]`);
 
-    await this.studentResultsCacheRepository.delete(input.studentId);
+    try {
+      await this.studentResultsCacheRepository.delete(input.studentId);
 
-    debugLog(
-      `Invalidated student results cache [studentId=${input.studentId}]`
-    );
+      debugLog(
+        `Invalidated student results cache [studentId=${input.studentId}]`
+      );
+    } catch (err: unknown) {
+      logger.error(
+        `Cache invalidation failed; cache may be stale until TTL expires [studentId=${input.studentId}]`,
+        { error: getErrorMessage(err) }
+      );
+    }
   }
 }
