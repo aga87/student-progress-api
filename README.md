@@ -1,8 +1,11 @@
 # Student Progress API
 
-Backend service for managing student results using MySQL on Google Cloud SQL with Redis caching.
+Backend service for managing student results, built with MySQL on Google Cloud SQL and Redis for caching.
 
-This project demonstrates:
+Implements a cache-aside strategy with explicit cache invalidation on writes and graceful degradation on cache failures, allowing the API to fall back to the database while accepting bounded staleness.
+
+## This project demonstrates:
+
 - MySQL schema design
 - raw SQL migrations (no ORM)
 - Redis cache-aside strategy with cache invalidation
