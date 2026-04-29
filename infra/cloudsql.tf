@@ -5,6 +5,11 @@ resource "google_sql_database_instance" "mysql" {
 
   settings {
     tier = "db-f1-micro"
+
+    database_flags {
+      name  = "cloudsql_iam_authentication"
+      value = "on"
+    }
   }
 
   deletion_protection = false
@@ -19,3 +24,8 @@ resource "google_sql_database" "app_db" {
   instance = google_sql_database_instance.mysql.name
 }
 
+resource "google_sql_user" "app_iam_user" {
+  name     = google_service_account.app.email
+  instance = google_sql_database_instance.mysql.name
+  type     = "CLOUD_IAM_SERVICE_ACCOUNT"
+}
