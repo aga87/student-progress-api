@@ -130,7 +130,7 @@ mysql -h 127.0.0.1 -P 3306 -u admin-user \
 4. Grant privileges:
 
 ```sql
-GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, INDEX
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, INDEX, REFERENCES
 ON student_progress.*
 TO 'student-progress-app-sa'@'%';
 ```

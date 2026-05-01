@@ -2,29 +2,33 @@ import fs from 'node:fs';
 import path from 'node:path';
 import 'dotenv/config';
 
-import { db } from '../src/startup/container.js';
+import { ENV } from '../src/config/env.js';
+import { createMySqlClient } from '../src/integrations/db/createMySqlClient.js';
 
 const seedFiles = [
   'sql/seeds/001_seed_students.sql',
   'sql/seeds/002_seed_results.sql',
 ];
 
-const runSeed = async () => {
-  for (const file of seedFiles) {
-    const sql = fs.readFileSync(path.resolve(file), 'utf8');
+const db = createMySqlClient(ENV.config.db);
 
-    await db.query(sql);
+const runSeed = async (): Promise<void> => {
+  try {
+    for (const file of seedFiles) {
+      const sql = fs.readFileSync(path.resolve(file), 'utf8');
 
-    console.log(`Seed executed: ${file}`);
+      await db.query(sql);
+
+      console.log(`Seed executed: ${file}`);
+    }
+
+    console.log('Seeding completed');
+  } finally {
+    await db.end();
   }
 };
 
-runSeed()
-  .then(() => {
-    console.log('Seeding completed');
-    process.exit(0);
-  })
-  .catch((error: unknown) => {
-    console.error('Seeding failed:', error);
-    process.exit(1);
-  });
+runSeed().catch((error: unknown) => {
+  console.error('Seeding failed:', error);
+  process.exit(1);
+});
