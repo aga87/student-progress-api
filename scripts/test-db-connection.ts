@@ -7,12 +7,7 @@ type DatabaseRow = RowDataPacket & {
 };
 
 async function main(): Promise<void> {
-  const db = createMySqlClient({
-    database: ENV.config.db.database,
-    host: ENV.config.db.host,
-    port: ENV.config.db.port,
-    user: ENV.config.db.user,
-  });
+  const db = createMySqlClient(ENV.config.db);
 
   try {
     const [dbRows] = await db.query<DatabaseRow[]>(
