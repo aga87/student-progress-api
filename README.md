@@ -55,10 +55,14 @@ Admin tasks    → separate admin user / controlled IAM access
 
 Infrastructure is provisioned using Terraform.
 
+**Pre-requisites**: install Terraform.
+
 Terraform workflow commands are defined in `infra/Makefile`, including formatting, validation, linting, planning, and applying changes.
 
 ```bash
 cd infra
+
+terraform init # one-off
 
 make plan-staging
 make apply-staging
