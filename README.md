@@ -24,16 +24,23 @@ Implements a cache-aside strategy with explicit cache invalidation on writes and
 - Docker – local containerised Redis development 
 - Terraform – infrastructure provisioning
 
-## Project structure 
-
-```
-src/          → application code
-scripts/      → dev/ops scripts (migrations, seed, db test)
-sql/          → raw SQL (schema + seed)
-infra/        → Terraform infrastructure configuration
-```
-
 ## Architecture
+
+The API is a Node.js/Express service with a MySQL database on Google Cloud SQL and Redis as a cache layer.
+
+The application uses a cache-aside strategy:
+
+1. Read requests first check Redis.
+2. On a cache hit, the cached response is returned.
+3. On a cache miss, the API reads from MySQL and stores the result in Redis with a TTL.
+4. Write operations update MySQL and explicitly invalidate affected cache keys.
+5. If Redis is unavailable, the API falls back to MySQL and logs the cache failure.
+
+Cloud SQL is accessed securely through the Cloud SQL Auth Proxy during local development. Database access uses IAM database authentication:
+
+- local development uses an individual IAM database user
+- the deployed app uses a service-account IAM database user
+- admin tasks use a separate admin user with controlled privileges
 
 ```
 Cloud SQL (remote DB)
@@ -43,12 +50,39 @@ Cloud SQL Auth Proxy
 MySQL CLI (optional, for debugging)
 ```
 
-**Users**
-
 ```txt
 Local dev      → individual IAM DB user
 Cloud Run app  → service account IAM DB user
 Admin tasks    → separate admin user / controlled IAM access
+```
+
+### API Scope
+
+This project intentionally implements a small set of representative endpoints rather than a complete CRUD API.
+The goal is to demonstrate backend architecture and infrastructure patterns.
+
+### Authentication
+
+Authentication is intentionally not implemented.
+In a production system, authentication would typically be added via:
+
+In a production system, authentication would be introduced at the HTTP boundary via Express middleware. Typical approaches include:
+
+-  JWT-based authentication (access + refresh tokens, stateless verification, token rotation)
+-  External identity providers using OAuth2 / OpenID Connect
+
+For GCP-based deployments, this service is designed to integrate with platform-native solutions such as:
+
+- Cloud Run IAM authentication for service-to-service communication
+- Identity-Aware Proxy (IAP) for user-level access control without embedding auth logic in the application
+
+## Project structure 
+
+```
+src/          → application code
+scripts/      → dev/ops scripts (migrations, seed, db test)
+sql/          → raw SQL (schema + seed)
+infra/        → Terraform infrastructure configuration
 ```
 
 ## Infrastructure (Terraform)
@@ -279,4 +313,38 @@ Populate database with sample data:
 
 ```
 npm run db:seed
+```
+
+## Database Workflow
+
+Local database setup is fully script-driven.
+
+Start the Cloud SQL Auth Proxy:
+
+```bash
+npm run dev:proxy
+```
+
+Reset the database (drop existing tables):
+
+```bash
+npm run db:reset
+```
+
+Apply schema migrations:
+
+```bash
+npm run db:migrate
+```
+
+Populate the database with sample data:
+
+```bash
+npm run db:seed
+```
+
+Optional: verify the connection:
+
+```bash
+npm run db:test
 ```
