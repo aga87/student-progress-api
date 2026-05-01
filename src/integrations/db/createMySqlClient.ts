@@ -1,11 +1,10 @@
 import mysql from 'mysql2/promise';
 
 export type MySqlConfig = {
+  database: string;
   host: string;
   port: number;
   user: string;
-  password: string;
-  database: string;
 };
 
 export const createMySqlClient = (config: MySqlConfig) => {

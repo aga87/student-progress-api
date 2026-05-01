@@ -43,6 +43,13 @@ Cloud SQL Auth Proxy
 MySQL CLI (optional, for debugging)
 ```
 
+**Users**
+
+```txt
+Local dev      → individual IAM DB user
+Cloud Run app  → service account IAM DB user
+Admin tasks    → separate admin user / controlled IAM access
+```
 
 ## Infrastructure (Terraform)
 
@@ -96,7 +103,7 @@ gcloud sql users delete root \
   --instance=student-progress-mysql-staging
 ```
 
-## 2. **Grant Database Privileges to Application IAM User**
+### 2. **Grant Database Privileges to Application IAM User**
 
 1. Get connection name:
 
@@ -123,10 +130,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, INDEX
 ON student_progress.*
 TO 'student-progress-app-sa'@'%';
 ```
-Then
-```sql
-FLUSH PRIVILEGES;
-```
 
 5. Reconnect as IAM user to test database privileges and the production service account identity locally.
 
@@ -147,7 +150,7 @@ cloud-sql-proxy \
   --port 3306
 ```
 
-Connect  an **IAM DB user**
+Connect as **IAM DB user**
 
 ```
 mysql -h 127.0.0.1 -P 3306 -u student-progress-app-sa
@@ -161,10 +164,9 @@ SHOW TABLES;
 ```
 
 
-
 ## One-off Local Development Setup
 
-1. Install Auth Proxy & update dev script
+### 1. **Install Auth Proxy & update dev script**
 
 ```shell
 brew install cloud-sql-proxy
@@ -172,8 +174,68 @@ brew install cloud-sql-proxy
 
 Ensure the Cloud SQL connection name in `package.json`- `"dev:proxy"` script is correct for your environment.
 
+### 2. **Provision IAM Database User for Local Development**
 
-2. Init Redis container
+Do this for **local dev as yourself**.
+
+1. Create user:
+
+```bash
+gcloud sql users create <YOUR_EMAIL> \
+  --instance=student-progress-mysql-staging \
+  --type=cloud_iam_user
+```
+
+2. Grant your Google user Cloud SQL IAM roles:
+
+```bash
+gcloud projects add-iam-policy-binding student-progress-staging \
+  --member="user:<YOUR_EMAIL>" \
+  --role="roles/cloudsql.client"
+```
+
+```shell
+gcloud projects add-iam-policy-binding student-progress-staging \
+  --member="user:<YOUR_EMAIL>" \
+  --role="roles/cloudsql.instanceUser"
+```
+
+`roles/cloudsql.client` is needed for the Auth Proxy, and `roles/cloudsql.instanceUser` is needed for IAM DB login.  
+
+3. **Connect as admin/root & grant privileges** (as above)
+
+Note: For Cloud SQL MySQL IAM users, the MySQL username is shortened.
+
+Example:
+
+```txt
+IAM email:    dev-user@example.com  
+MySQL user:   dev-user
+```
+
+4. Update `DB_USER` env var - also shorthand. 
+
+
+5. Authenticate locally
+
+```bash
+gcloud auth application-default login
+```
+
+6. Start proxy*
+
+```shell
+npm run dev:proxy
+```
+
+7. Test db connection
+
+```bash
+npm run db:test
+```
+
+
+### 3. **Init Redis container**
 
 ```shell
 docker run --name student-progress-redis -p 6379:6379 -d redis

@@ -10,11 +10,10 @@ import {
 } from '../services/index.js';
 
 export const db = createMySqlClient({
+  database: ENV.config.db.database,
   host: ENV.config.db.host,
   port: ENV.config.db.port,
   user: ENV.config.db.user,
-  password: ENV.secrets.dbPassword,
-  database: ENV.config.db.name,
 });
 
 const redisClient = await createRedisClient({
