@@ -10,7 +10,7 @@ Implements a cache-aside strategy with explicit cache invalidation on writes and
 - raw SQL migrations (no ORM)
 - Redis cache-aside strategy with cache invalidation
 - Cloud SQL setup on GCP
-- * Cloud Run deployment (serverless container runtime)
+- Cloud Run deployment (serverless container runtime)
 - secure local development via Auth Proxy
 - TypeScript backend with clear layering
 - Infrastructure as Code (Terraform)
@@ -365,20 +365,6 @@ This will:
 - start the application in watch mode
 
 
-## Database Workflow
-
-
-Schema is managed via raw SQL migrations:
-
-```
-npm run db:migrate
-```
-
-Populate database with sample data:
-
-```
-npm run db:seed
-```
 
 ## Database Workflow
 
