@@ -4,12 +4,13 @@ Backend service for managing student results, built with MySQL on Google Cloud S
 
 Implements a cache-aside strategy with explicit cache invalidation on writes and graceful degradation on cache failures, allowing the API to fall back to the database while accepting bounded staleness.
 
-## This project demonstrates:
+## This project demonstrates
 
 - MySQL schema design
 - raw SQL migrations (no ORM)
 - Redis cache-aside strategy with cache invalidation
 - Cloud SQL setup on GCP
+- * Cloud Run deployment (serverless container runtime)
 - secure local development via Auth Proxy
 - TypeScript backend with clear layering
 - Infrastructure as Code (Terraform)
@@ -20,9 +21,84 @@ Implements a cache-aside strategy with explicit cache invalidation on writes and
 - TypeScript – type-safe language
 - Express – REST API layer
 - Google Cloud SQL - Database
+- Google Cloud Run – serverless container platform
 - Redis – caching layer  
 - Docker – local containerised Redis development 
 - Terraform – infrastructure provisioning
+
+## Architecture
+
+The API is a Node.js/Express service with a MySQL database on Google Cloud SQL and Redis as a cache layer.
+
+The application uses a cache-aside strategy:
+
+1. Read requests first check Redis.
+2. On a cache hit, the cached response is returned.
+3. On a cache miss, the API reads from MySQL and stores the result in Redis with a TTL.
+4. Write operations update MySQL and explicitly invalidate affected cache keys.
+5. If Redis is unavailable, the API falls back to MySQL and logs the cache failure.
+
+**Redis (Memorystore)** is deployed with a private IP inside a VPC network.
+Cloud Run accesses Redis using Direct VPC egress (`private-ranges-only`).
+
+**Cloud SQL connectivity** differs between environments:
+
+- Local development uses the Cloud SQL Auth Proxy with IAM authentication over TCP
+- Production uses the Cloud SQL Node.js Connector with IAM database authentication
+- No database passwords are stored or used in the application
+
+Local:
+```
+Client → Node.js app (Express)
+              ↓
+          Redis (local Docker)
+          ↙         ↘
+     (hit) return   (miss)
+                      ↓
+        Cloud SQL Auth Proxy
+                      ↓
+             Cloud SQL (MySQL)
+                      ↓
+                   return
+```
+
+Production:
+```
+Client → Cloud Run
+           ↓
+        Redis (cache)
+           ↓ (miss)
+     MySQL (source of truth)
+```
+
+**Database access** uses IAM database authentication:
+
+
+```txt
+Local dev      → individual IAM DB user
+Cloud Run app  → service account IAM DB user
+Admin tasks    → separate admin user / controlled IAM access
+```
+
+
+### API Scope
+
+This project intentionally implements a small set of representative endpoints rather than a complete CRUD API.
+The goal is to demonstrate backend architecture and infrastructure patterns.
+
+### Authentication
+
+Authentication is intentionally not implemented.
+
+In a production system, authentication would be introduced at the HTTP boundary via Express middleware. Typical approaches include:
+
+-  JWT-based authentication (access + refresh tokens, stateless verification, token rotation)
+-  External identity providers using OAuth2 / OpenID Connect
+
+For GCP-based deployments, this service is designed to integrate with platform-native solutions such as:
+
+- Cloud Run IAM authentication for service-to-service communication
+- Identity-Aware Proxy (IAP) for user-level access control without embedding auth logic in the application
 
 ## Project structure 
 
@@ -31,24 +107,6 @@ src/          → application code
 scripts/      → dev/ops scripts (migrations, seed, db test)
 sql/          → raw SQL (schema + seed)
 infra/        → Terraform infrastructure configuration
-```
-
-## Architecture
-
-```
-Cloud SQL (remote DB)
-+
-Cloud SQL Auth Proxy
-+
-MySQL CLI (optional, for debugging)
-```
-
-**Users**
-
-```txt
-Local dev      → individual IAM DB user
-Cloud Run app  → service account IAM DB user
-Admin tasks    → separate admin user / controlled IAM access
 ```
 
 ## Infrastructure (Terraform)
@@ -167,6 +225,47 @@ USE student_progress;
 SHOW TABLES;
 ```
 
+### 3. First deployment
+
+1. Authenticate Docker with Artifact Registry
+
+```bash
+gcloud auth configure-docker europe-west3-docker.pkg.dev
+```
+
+2. Build and tag the image
+
+```bash
+npm run build
+```
+
+```bash
+docker buildx build \
+  --platform linux/amd64 \
+  -t europe-west3-docker.pkg.dev/student-progress-staging/student-progress-api/student-progress-api:latest \
+  .
+```
+
+3. Push to the Artifact Registry
+
+```bash
+docker push europe-west3-docker.pkg.dev/student-progress-staging/student-progress-api/student-progress-api:latest
+```
+
+4. Deploy to Cloud Run (with CloudSQL & Redis)
+
+```bash
+gcloud run deploy student-progress-api \
+  --image europe-west3-docker.pkg.dev/student-progress-staging/student-progress-api/student-progress-api:latest \
+  --region europe-west3 \
+  --service-account=student-progress-app-sa@student-progress-staging.iam.gserviceaccount.com \
+  --network default \
+  --subnet default \
+  --vpc-egress private-ranges-only \
+  --allow-unauthenticated \
+  --set-env-vars "NODE_ENV=production,DB_CONNECTION_TYPE=cloud-sql-iam,DB_INSTANCE_CONNECTION_NAME=student-progress-staging:europe-west3:student-progress-mysql-staging,DB_USER=student-progress-app-sa,DB_NAME=student_progress,REDIS_HOST=<REDIS_HOST>,REDIS_PORT=6379,REDIS_TTL_SECONDS=60"
+  ```
+Note: Replace `<REDIS_HOST>` with the Memorystore private IP.
 
 ## One-off Local Development Setup
 
@@ -279,4 +378,38 @@ Populate database with sample data:
 
 ```
 npm run db:seed
+```
+
+## Database Workflow
+
+Local database setup is fully script-driven.
+
+Start the Cloud SQL Auth Proxy:
+
+```bash
+npm run dev:proxy
+```
+
+Reset the database (drop existing tables):
+
+```bash
+npm run db:reset
+```
+
+Apply schema migrations:
+
+```bash
+npm run db:migrate
+```
+
+Populate the database with sample data:
+
+```bash
+npm run db:seed
+```
+
+Optional: verify the connection:
+
+```bash
+npm run db:test
 ```

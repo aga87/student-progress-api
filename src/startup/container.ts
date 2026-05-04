@@ -9,12 +9,9 @@ import {
   StudentResultsQueryService,
 } from '../services/index.js';
 
-export const db = createMySqlClient(ENV.config.db);
+export const db = await createMySqlClient(ENV.config.db);
 
-const redisClient = await createRedisClient({
-  host: ENV.config.redis.host,
-  port: ENV.config.redis.port,
-});
+const redisClient = await createRedisClient(ENV.config.redis);
 
 const studentResultsRepository = new StudentResultsRepository(() => db);
 

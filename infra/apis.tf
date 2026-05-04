@@ -1,6 +1,9 @@
 resource "google_project_service" "apis" {
   for_each = toset([
+    "artifactregistry.googleapis.com",
     "iamcredentials.googleapis.com",
+    "run.googleapis.com", # for deploying to Cloud Run
+    "redis.googleapis.com",
     "secretmanager.googleapis.com",
     "sqladmin.googleapis.com"
   ])

@@ -2,17 +2,28 @@ import 'dotenv/config';
 import { requireEnv } from './requireEnv.js';
 import type { MySqlConfig } from '../integrations/db/createMySqlClient.js';
 
+const dbConfig: MySqlConfig =
+  process.env.DB_CONNECTION_TYPE === 'cloud-sql-iam'
+    ? {
+        connectionType: 'cloud-sql-iam',
+        instanceConnectionName: requireEnv('DB_INSTANCE_CONNECTION_NAME'),
+        user: requireEnv('DB_USER'),
+        database: requireEnv('DB_NAME'),
+      }
+    : {
+        connectionType: 'tcp',
+        host: requireEnv('DB_HOST'),
+        port: Number(requireEnv('DB_PORT')),
+        user: requireEnv('DB_USER'),
+        database: requireEnv('DB_NAME'),
+      };
+
 export const ENV = {
   config: {
     nodeEnv: requireEnv('NODE_ENV'),
-    port: Number(requireEnv('PORT')),
+    port: Number(process.env.PORT ?? 3001),
 
-    db: {
-      database: requireEnv('DB_NAME'),
-      host: requireEnv('DB_HOST'),
-      port: Number(requireEnv('DB_PORT')),
-      user: requireEnv('DB_USER'),
-    } satisfies MySqlConfig,
+    db: dbConfig,
 
     redis: {
       host: requireEnv('REDIS_HOST'),

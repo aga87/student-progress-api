@@ -7,6 +7,7 @@ resource "google_project_iam_member" "app_roles" {
   for_each = toset([
     "roles/cloudsql.client",
     "roles/cloudsql.instanceUser",
+    "roles/secretmanager.secretAccessor"
   ])
 
   project = var.project_id
