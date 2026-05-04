@@ -11,7 +11,7 @@ const migrations = [
   'sql/migrations/002_create_results.sql',
 ];
 
-const db = createMySqlClient(ENV.config.db);
+const db = await createMySqlClient(ENV.config.db);
 
 const runMigrations = async (): Promise<void> => {
   try {

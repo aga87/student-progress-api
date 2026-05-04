@@ -10,7 +10,7 @@ const seedFiles = [
   'sql/seeds/002_seed_results.sql',
 ];
 
-const db = createMySqlClient(ENV.config.db);
+const db = await createMySqlClient(ENV.config.db);
 
 const runSeed = async (): Promise<void> => {
   try {
