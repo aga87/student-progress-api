@@ -109,6 +109,10 @@ sql/          → raw SQL (schema + seed)
 infra/        → Terraform infrastructure configuration
 ```
 
+## Prerequisites
+
+- Node.js (see `.nvmrc` or `mise.toml` for the required version)
+
 ## Infrastructure (Terraform)
 
 Infrastructure is provisioned using Terraform.
