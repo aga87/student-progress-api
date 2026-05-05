@@ -1,3 +1,5 @@
+[![CI](https://github.com/aga87/student-progress-api/actions/workflows/ci.yml/badge.svg)](https://github.com/aga87/student-progress-api/actions)
+
 # Student Progress API
 
 Backend service for managing student results, built with MySQL on Google Cloud SQL and Redis for caching. Infrastructure is provisioned using Terraform.
