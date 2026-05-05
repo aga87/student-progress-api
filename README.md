@@ -1,3 +1,5 @@
+[![CI](https://github.com/aga87/student-progress-api/actions/workflows/ci.yml/badge.svg)](https://github.com/aga87/student-progress-api/actions)
+
 # Student Progress API
 
 Backend service for managing student results, built with MySQL on Google Cloud SQL and Redis for caching. Infrastructure is provisioned using Terraform.
@@ -22,8 +24,8 @@ Implements a cache-aside strategy with explicit cache invalidation on writes and
 - Express – REST API layer
 - Google Cloud SQL - Database
 - Google Cloud Run – serverless container platform
-- Redis – caching layer  
-- Docker – local containerised Redis development 
+- Redis – caching layer
+- Docker – local containerised Redis development
 - Terraform – infrastructure provisioning
 
 ## Architecture
@@ -48,6 +50,7 @@ Cloud Run accesses Redis using Direct VPC egress (`private-ranges-only`).
 - No database passwords are stored or used in the application
 
 Local:
+
 ```
 Client → Node.js app (Express)
               ↓
@@ -63,6 +66,7 @@ Client → Node.js app (Express)
 ```
 
 Production:
+
 ```
 Client → Cloud Run
            ↓
@@ -73,13 +77,11 @@ Client → Cloud Run
 
 **Database access** uses IAM database authentication:
 
-
 ```txt
 Local dev      → individual IAM DB user
 Cloud Run app  → service account IAM DB user
 Admin tasks    → separate admin user / controlled IAM access
 ```
-
 
 ### API Scope
 
@@ -92,15 +94,15 @@ Authentication is intentionally not implemented.
 
 In a production system, authentication would be introduced at the HTTP boundary via Express middleware. Typical approaches include:
 
--  JWT-based authentication (access + refresh tokens, stateless verification, token rotation)
--  External identity providers using OAuth2 / OpenID Connect
+- JWT-based authentication (access + refresh tokens, stateless verification, token rotation)
+- External identity providers using OAuth2 / OpenID Connect
 
 For GCP-based deployments, this service is designed to integrate with platform-native solutions such as:
 
 - Cloud Run IAM authentication for service-to-service communication
 - Identity-Aware Proxy (IAP) for user-level access control without embedding auth logic in the application
 
-## Project structure 
+## Project structure
 
 ```
 src/          → application code
@@ -108,6 +110,10 @@ scripts/      → dev/ops scripts (migrations, seed, db test)
 sql/          → raw SQL (schema + seed)
 infra/        → Terraform infrastructure configuration
 ```
+
+## Prerequisites
+
+- Node.js (see `.nvmrc` or `mise.toml` for the required version)
 
 ## Infrastructure (Terraform)
 
@@ -138,10 +144,10 @@ Run once per environment.
 The Cloud SQL instance, database, Secret Manager containers, and IAM-based application user are provisioned via Terraform.  
 Credential values (such as the admin/root password) are configured separately to avoid storing secrets in Terraform state.
 
- ### 1. **Create a new database admin user** 
+### 1. **Create a new database admin user**
 
 The ‘root’@’%’ user is the default and most popular super user and therefore is often targeted by hackers. Creating a new admin user is the best security practice.
- 
+
 1. Store password in Secret Manager first:
 
 ```bash
@@ -173,6 +179,7 @@ gcloud sql users delete root \
 gcloud sql instances describe student-progress-mysql-staging \
   --format='value(connectionName)'
 ```
+
 2. Run proxy **without** IAM auth
 
 ```shell
@@ -180,6 +187,7 @@ cloud-sql-proxy student-progress-staging:europe-west3:student-progress-mysql-sta
 ```
 
 3. Connect as admin user:
+
 ```shell
 mysql -h 127.0.0.1 -P 3306 -u admin-user \
   -p"$(gcloud secrets versions access latest --secret=staging-db-admin-password)"
@@ -196,6 +204,7 @@ TO 'student-progress-app-sa'@'%';
 5. Reconnect as IAM user to test database privileges and the production service account identity locally.
 
 Allow a developer (or CI) to impersonate the application service account:
+
 ```bash
 gcloud iam service-accounts add-iam-policy-binding \
   student-progress-app-sa@student-progress-staging.iam.gserviceaccount.com \
@@ -203,7 +212,8 @@ gcloud iam service-accounts add-iam-policy-binding \
   --role="roles/iam.serviceAccountTokenCreator"
 ```
 
- Run the proxy while impersonating the service account:
+Run the proxy while impersonating the service account:
+
 ```bash
 cloud-sql-proxy \
   --auto-iam-authn \
@@ -264,7 +274,8 @@ gcloud run deploy student-progress-api \
   --vpc-egress private-ranges-only \
   --allow-unauthenticated \
   --set-env-vars "NODE_ENV=production,DB_CONNECTION_TYPE=cloud-sql-iam,DB_INSTANCE_CONNECTION_NAME=student-progress-staging:europe-west3:student-progress-mysql-staging,DB_USER=student-progress-app-sa,DB_NAME=student_progress,REDIS_HOST=<REDIS_HOST>,REDIS_PORT=6379,REDIS_TTL_SECONDS=60"
-  ```
+```
+
 Note: Replace `<REDIS_HOST>` with the Memorystore private IP.
 
 ## One-off Local Development Setup
@@ -312,12 +323,11 @@ Note: For Cloud SQL MySQL IAM users, the MySQL username is shortened.
 Example:
 
 ```txt
-IAM email:    dev-user@example.com  
+IAM email:    dev-user@example.com
 MySQL user:   dev-user
 ```
 
-4. Update `DB_USER` env var - also shorthand. 
-
+4. Update `DB_USER` env var - also shorthand.
 
 5. Authenticate locally
 
@@ -325,7 +335,7 @@ MySQL user:   dev-user
 gcloud auth application-default login
 ```
 
-6. Start proxy*
+6. Start proxy\*
 
 ```shell
 npm run dev:proxy
@@ -336,7 +346,6 @@ npm run dev:proxy
 ```bash
 npm run db:test
 ```
-
 
 ### 3. **Init Redis container**
 
@@ -352,7 +361,6 @@ docker stop student-progress-redis
 
 Future development startup will restart Redis automatically via the dev script.
 
-
 ## Local Development
 
 ```shell
@@ -360,11 +368,10 @@ npm run dev
 ```
 
 This will:
+
 - start the Redis Docker container
 - start the Cloud SQL Auth Proxy
 - start the application in watch mode
-
-
 
 ## Database Workflow
 

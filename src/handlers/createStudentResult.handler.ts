@@ -1,22 +1,20 @@
 import { type RequestHandler } from 'express';
 import { studentResultsCommandService } from '../startup/container.js';
+import { validateSchema } from '../libs/joiValidator.js';
+import { createStudentResultSchema } from '../dto/createStudentResultSchema.dto.js';
 
 export const createStudentResultHandler: RequestHandler = async (req, res) => {
-  const { studentId, subject, score } = req.body;
+  const result = validateSchema(req.body, createStudentResultSchema);
 
-  // TODO: improve validation (out of scope for now)
-  if (
-    !Number.isInteger(studentId) ||
-    studentId <= 0 ||
-    typeof subject !== 'string' ||
-    subject.trim().length === 0 ||
-    !Number.isInteger(score) ||
-    score < 0
-  ) {
+  if (!result.success) {
     return res.status(400).json({
       message: 'Invalid request body',
+
+      errors: result.errors,
     });
   }
+
+  const { studentId, subject, score } = result.data;
 
   await studentResultsCommandService.createResult({
     studentId,
