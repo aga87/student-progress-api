@@ -260,10 +260,6 @@ gcloud auth configure-docker europe-west3-docker.pkg.dev
 2. Build and tag the image
 
 ```bash
-npm run build
-```
-
-```bash
 docker buildx build \
   --platform linux/amd64 \
   -t europe-west3-docker.pkg.dev/student-progress-staging/student-progress-api/student-progress-api:latest \
