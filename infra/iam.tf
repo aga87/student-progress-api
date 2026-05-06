@@ -61,7 +61,8 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
     "attribute.ref"              = "assertion.ref"
   }
 
-  attribute_condition = "assertion.repository == '${var.github_org}/${var.github_repo}' && assertion.ref == 'refs/heads/main'"
+  # Allow authentication only from this repository and the dev/main deployment branches
+  attribute_condition = "assertion.repository == '${var.github_org}/${var.github_repo}' && (assertion.ref == 'refs/heads/dev' || assertion.ref == 'refs/heads/main')"
 
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"

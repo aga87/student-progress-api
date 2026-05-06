@@ -26,9 +26,11 @@ variable "db_name" {
 }
 
 variable "github_org" {
-  type = string
+  type    = string
+  default = "aga87"
 }
 
 variable "github_repo" {
-  type = string
+  type    = string
+  default = "student-progress-api"
 }
