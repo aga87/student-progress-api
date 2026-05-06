@@ -1,4 +1,5 @@
 name: CI
+run-name: '[PR] Running pre-merge checks for PR#${{ github.event.number }}'
 
 on:
   push:

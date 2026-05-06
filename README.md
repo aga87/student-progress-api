@@ -83,6 +83,20 @@ Cloud Run app  → service account IAM DB user
 Admin tasks    → separate admin user / controlled IAM access
 ```
 
+**The API runs on Cloud Run and connects to private resources via Direct VPC egress.**
+
+```txt
+Client
+   ↓
+Cloud Run service
+   ↓
+Direct VPC egress
+   ↓
+VPC Network
+   ↓
+Private resources (Cloud SQL / Redis)
+```
+
 ### API Scope
 
 This project intentionally implements a small set of representative endpoints rather than a complete CRUD API.
@@ -277,6 +291,28 @@ gcloud run deploy student-progress-api \
 ```
 
 Note: Replace `<REDIS_HOST>` with the Memorystore private IP.
+
+Subsequent deployments are handled with GitHub Actions.
+
+### 4. GitHub Actions Authentication (OIDC)
+
+GitHub Actions authenticates to GCP using Workload Identity Federation (OIDC) instead of long-lived JSON service account keys.
+
+Terraform provisions:
+
+- a dedicated GitHub Actions deployer service account
+- a Workload Identity Pool
+- a GitHub OIDC provider
+- IAM bindings allowing the repository to impersonate the deployer service account
+
+Apply the Terraform configuration.
+
+Add these Terraform outputs as GitHub Actions repository secrets:
+
+| **Secret**                     | **Terraform output**                   |
+| ------------------------------ | -------------------------------------- |
+| GCP_WORKLOAD_IDENTITY_PROVIDER | github_workload_identity_provider_name |
+| GCP_SERVICE_ACCOUNT            | github_deployer_service_account_email  |
 
 ## One-off Local Development Setup
 
