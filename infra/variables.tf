@@ -24,3 +24,11 @@ variable "db_name" {
   description = "Application database name"
   default     = "student_progress"
 }
+
+variable "github_org" {
+  type = string
+}
+
+variable "github_repo" {
+  type = string
+}
