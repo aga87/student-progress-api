@@ -249,48 +249,9 @@ USE student_progress;
 SHOW TABLES;
 ```
 
-### 3. First deployment
+### 3. GitHub Actions Authentication (OIDC)
 
-1. Authenticate Docker with Artifact Registry
-
-```bash
-gcloud auth configure-docker europe-west3-docker.pkg.dev
-```
-
-2. Build and tag the image
-
-```bash
-docker buildx build \
-  --platform linux/amd64 \
-  -t europe-west3-docker.pkg.dev/student-progress-staging/student-progress-api/student-progress-api:latest \
-  .
-```
-
-3. Push to the Artifact Registry
-
-```bash
-docker push europe-west3-docker.pkg.dev/student-progress-staging/student-progress-api/student-progress-api:latest
-```
-
-4. Deploy to Cloud Run (with CloudSQL & Redis)
-
-```bash
-gcloud run deploy student-progress-api \
-  --image europe-west3-docker.pkg.dev/student-progress-staging/student-progress-api/student-progress-api:latest \
-  --region europe-west3 \
-  --service-account=student-progress-app-sa@student-progress-staging.iam.gserviceaccount.com \
-  --network default \
-  --subnet default \
-  --vpc-egress private-ranges-only \
-  --allow-unauthenticated \
-  --set-env-vars "NODE_ENV=production,DB_CONNECTION_TYPE=cloud-sql-iam,DB_INSTANCE_CONNECTION_NAME=student-progress-staging:europe-west3:student-progress-mysql-staging,DB_USER=student-progress-app-sa,DB_NAME=student_progress,REDIS_HOST=<REDIS_HOST>,REDIS_PORT=6379,REDIS_TTL_SECONDS=60"
-```
-
-Note: Replace `<REDIS_HOST>` with the Memorystore private IP.
-
-Subsequent deployments are handled with GitHub Actions.
-
-### 4. GitHub Actions Authentication (OIDC)
+Deployments are handled automatically via GitHub Actions.
 
 GitHub Actions authenticates to GCP using Workload Identity Federation (OIDC) instead of long-lived JSON service account keys.
 
@@ -309,6 +270,14 @@ Add these Terraform outputs as GitHub Actions repository secrets:
 | ------------------------------ | -------------------------------------- |
 | GCP_WORKLOAD_IDENTITY_PROVIDER | github_workload_identity_provider_name |
 | GCP_SERVICE_ACCOUNT            | github_deployer_service_account_email  |
+
+## Deployment
+
+Deployments are handled automatically via GitHub Actions.
+
+Push to the `dev` branch to deploy to staging.
+
+Push to the `main` branch to deploy to production.
 
 ## One-off Local Development Setup
 
