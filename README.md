@@ -133,7 +133,33 @@ infra/        → Terraform infrastructure configuration
 
 Infrastructure is provisioned using Terraform.
 
-**Pre-requisites**: install Terraform.
+### Prerequisites
+
+1. Install [Terraform](https://developer.hashicorp.com/terraform/install)
+2. Install TFLint
+
+```bash
+# macOS
+brew install tflint
+```
+
+3. Install TFSec
+
+```bash
+# macOS
+brew install tfsec
+```
+
+### Configuration
+
+Create environment variable files for each Terraform environment:
+
+```bash
+cp infra/staging.tfvars.example infra/staging.tfvars
+cp infra/prod.tfvars.example infra/prod.tfvars
+```
+
+### Workflow
 
 Terraform workflow commands are defined in `infra/Makefile`, including formatting, validation, linting, planning, and applying changes.
 
