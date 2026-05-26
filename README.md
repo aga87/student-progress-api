@@ -135,7 +135,6 @@ Infrastructure is provisioned using Terraform.
 
 ### Prerequisites
 
-
 1. [Install Terraform](https://developer.hashicorp.com/terraform/install)
 
 2. [Install TFLint](https://github.com/terraform-linters/tflint?utm_source=chatgpt.com)
