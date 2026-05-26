@@ -135,28 +135,19 @@ Infrastructure is provisioned using Terraform.
 
 ### Prerequisites
 
-1. Install [Terraform](https://developer.hashicorp.com/terraform/install)
-2. Install TFLint
+1. [Install Terraform](https://developer.hashicorp.com/terraform/install)
 
-```bash
-# macOS
-brew install tflint
-```
+2. [Install TFLint](https://github.com/terraform-linters/tflint?utm_source=chatgpt.com)
 
-3. Install TFSec
-
-```bash
-# macOS
-brew install tfsec
-```
+3. [Install TFSec](https://aquasecurity.github.io/tfsec/v0.63.1/getting-started/installation/)
 
 ### Configuration
 
-Create environment variable files for each Terraform environment:
+Terraform non-secret environment configuration lives in:
 
-```bash
-cp infra/staging.tfvars.example infra/staging.tfvars
-cp infra/prod.tfvars.example infra/prod.tfvars
+```text
+infra/staging.tfvars
+infra/prod.tfvars
 ```
 
 ### Workflow
@@ -168,13 +159,15 @@ cd infra
 
 terraform init # one-off
 
-make plan-staging
-make apply-staging
-make destroy-staging
+make plan
+make apply
+make destroy
+```
 
-make plan-prod
-make apply-prod
-make destroy-prod
+Commands default to the staging environment. In prod:
+
+```bash
+make apply ENV=prod
 ```
 
 ## One-off Infrastructure Setup (GCP)
